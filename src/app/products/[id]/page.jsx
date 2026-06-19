@@ -2,89 +2,70 @@
  * SSR Product Detail Page — Server Component
  *
  * Fetches product data at request time via the internal Next.js API route.
- * Uses searchParams (query params) — e.g. /product?id=xxx
+ * Uses dynamic route params — /products/{id}
  *
  * This demonstrates:
  * - Next.js SSR with server components
+ * - Dynamic route segments ([id] param)
  * - API route usage for server-side data fetching
- * - Query params (searchParams) in Next.js App Router
+ * - fetchData wrapper for clean try-catch handling
  */
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiArrowLeft, FiPackage, FiStar, FiTruck, FiShield } from 'react-icons/fi';
 import ProductActions from '@/components/products/ProductActions';
+import { fetchData } from '@/utils/fetchData';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 // Metadata for SEO — dynamic based on product
-export async function generateMetadata({ searchParams }) {
-  const params = await searchParams;
-  const productId = params?.id;
+export async function generateMetadata({ params }) {
+  const { id: productId } = await params;
 
   if (!productId) {
     return { title: 'Product Not Found — QuickBuy' };
   }
 
-  try {
-    const res = await fetch(
-      `http://localhost:3000/api/product?id=${productId}`,
-      { cache: 'no-store' }
-    );
-    const data = await res.json();
-    const product = data?.data;
+  const isPreRendered = ['1', '2', '3', '4', '5'].includes(String(productId));
 
-    if (product) {
-      return {
-        title: `${product.name} — QuickBuy`,
-        description: product.description || `Buy ${product.name} on QuickBuy`,
-      };
-    }
-  } catch {
-    // fallback
+  const { data: product } = await fetchData({
+    url: `${API_BASE_URL}/api/products/${productId}`,
+    label: 'ProductMeta',
+    revalidate: isPreRendered ? undefined : 180,
+    fallback: null,
+  });
+
+  if (product) {
+    return {
+      title: `${product.name} — QuickBuy`,
+      description: product.description || `Buy ${product.name} on QuickBuy`,
+    };
   }
 
   return { title: 'Product — QuickBuy' };
 }
 
-export default async function ProductDetailPage({ searchParams }) {
-  const params = await searchParams;
-  const productId = params?.id;
+// Pre-render specific products (IDs 1-5) at build time
+export async function generateStaticParams() {
+  const ids = ['1', '2', '3', '4', '5'];
 
-  // No ID provided
-  if (!productId) {
-    return (
-      <div className="product-detail-error">
-        <div className="product-detail-error__card">
-          <FiPackage size={48} />
-          <h1>Product Not Found</h1>
-          <p>No product ID was provided. Please select a product from the catalogue.</p>
-          <Link href="/products" className="product-detail-error__back">
-            <FiArrowLeft size={18} />
-            Browse Products
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  return ids.map((id) => ({
+    id: id,
+  }));
+}
+
+export default async function ProductDetailPage({ params }) {
+  const { id: productId } = await params;
+
+  const isPreRendered = ['1', '2', '3', '4', '5'].includes(String(productId));
 
   // Fetch product data from our API route (SSR — runs on the server)
-  let product = null;
-  let fetchError = null;
-
-  try {
-    const res = await fetch(
-      `http://localhost:3000/api/product?id=${productId}`,
-      { cache: 'no-store' }
-    );
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      fetchError = errData?.error || 'Product not found';
-    } else {
-      const data = await res.json();
-      product = data?.data;
-    }
-  } catch (err) {
-    fetchError = 'Failed to load product details. Please try again later.';
-  }
+  const { data: product, error: fetchError } = await fetchData({
+    url: `${API_BASE_URL}/api/products/${productId}`,
+    label: 'ProductDetail',
+    revalidate: isPreRendered ? undefined : 180,
+    fallback: null,
+  });
 
   // Error state
   if (fetchError || !product) {
@@ -118,7 +99,7 @@ export default async function ProductDetailPage({ searchParams }) {
     ratings,
   } = product;
 
-  const resolvedId = _product_id;
+  const resolvedId = product_id;
   const allImages = image ? [image, ...images.filter((i) => i !== image)] : images;
   const hasDiscount = discountPrice && discountPrice < price;
   const inStock = stock === undefined || stock > 0;

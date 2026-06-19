@@ -19,11 +19,11 @@ export default function TopBar() {
 
   const initials = profile?.name
     ? profile.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
     : 'QB';
 
   const handleLogout = async () => {
@@ -51,21 +51,15 @@ export default function TopBar() {
         </div>
 
         <div className="topbar__actions">
-          <button 
-            className="topbar__icon-btn" 
-            aria-label="Cart" 
+          <button
+            className="topbar__icon-btn"
+            aria-label="Cart"
             id="cart-btn"
             onClick={() => router.push('/cart')}
             title="Cart"
           >
             <FiShoppingCart size={20} />
           </button>
-
-          <button className="topbar__icon-btn" aria-label="Notifications" id="notifications-btn">
-            <FiBell size={20} />
-            <span className="topbar__badge">3</span>
-          </button>
-
           <button
             className="topbar__icon-btn topbar__icon-btn--logout"
             aria-label="Logout"
@@ -76,7 +70,11 @@ export default function TopBar() {
             <FiLogOut size={20} />
           </button>
 
-          <div className="topbar__profile">
+          <div
+            className="topbar__profile cursor-pointer hover:bg-gray-50 transition-colors rounded-lg p-1"
+            onClick={() => router.push('/profile')}
+            title="View Profile"
+          >
             <div className="topbar__avatar" id="user-avatar">
               {initials}
             </div>

@@ -83,7 +83,7 @@ export default function ProductCard({ product }) {
 
   return (
     <div className="product-card" id={`product-card-${productId}`}>
-      <Link href={`/product?id=${productId}`} className="product-card__link">
+      <Link href={`/products/${productId}`} className="product-card__link">
         <div className="product-card__image-wrap">
           {productImage ? (
             <Image

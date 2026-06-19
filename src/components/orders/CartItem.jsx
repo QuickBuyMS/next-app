@@ -18,7 +18,7 @@ export default function CartItem({ item, onUpdate, onRemove }) {
   return (
     <div className="cart-item" id={`cart-item-${productId}`}>
       {/* Product Image — links to detail page */}
-      <Link href={`/product?id=${productId}`} className="cart-item__image-container">
+      <Link href={`/products/${productId}`} className="cart-item__image-container">
         {item.image || item.image_url ? (
           <Image src={item.image || item.image_url} alt={item.name} className="cart-item__image" width={100} height={100} unoptimized />
         ) : (
@@ -28,7 +28,7 @@ export default function CartItem({ item, onUpdate, onRemove }) {
 
       {/* Product Details */}
       <div className="cart-item__details">
-        <Link href={`/product?id=${productId}`} className="cart-item__name-link">
+        <Link href={`/products/${productId}`} className="cart-item__name-link">
           <h4 className="cart-item__name">{item.name || 'Product Name'}</h4>
         </Link>
         {item.category && (

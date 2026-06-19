@@ -15,6 +15,7 @@ import {
   FiChevronRight,
   FiMapPin,
   FiShoppingCart,
+  FiUser,
 } from 'react-icons/fi';
 import { useLogoutMutation } from '@/services/authApi';
 import { useState } from 'react';
@@ -25,7 +26,7 @@ const navItems = [
   { label: 'Orders', href: '/orders', icon: <FiPackage size={20} /> },
   { label: 'Wishlist', href: '/wishlist', icon: <FiHeart size={20} /> },
   { label: 'Addresses', href: '/addresses', icon: <FiMapPin size={20} /> },
-  { label: 'Settings', href: '/settings', icon: <FiSettings size={20} /> },
+  { label: 'Profile', href: '/profile', icon: <FiUser size={20} /> },
 ];
 
 export default function Sidebar() {

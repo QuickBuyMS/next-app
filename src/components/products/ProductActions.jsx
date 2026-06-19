@@ -21,7 +21,7 @@ export default function ProductActions({ productId, productName }) {
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
-      router.push(`/signin?redirect=/product?id=${productId}`);
+      router.push(`/signin?redirect=/products/${productId}`);
       return;
     }
 
