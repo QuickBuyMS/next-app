@@ -15,7 +15,9 @@ import { hydrateAuth, hydrateComplete } from './slice/authSlice';
 import { getItem } from '@/utils/localStorage';
 import axios from 'axios';
 
-const AUTH_BACKEND_URL = 'http://localhost:7001';
+import { environmentConfig } from '@/configs/envConfig';
+
+const AUTH_BACKEND_URL = environmentConfig.API_ENDPOINT_URL;
 
 export default function StoreProvider({ children }) {
   const [isReady, setIsReady] = useState(false);

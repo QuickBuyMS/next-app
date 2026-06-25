@@ -8,7 +8,7 @@
  */
 import { apiHandler } from '@/utils/apiHandler';
 
-const CATALOGUE_BASE_URL = 'http://localhost:7002';
+const CATALOGUE_BASE_URL = process.env.CATALOGUE_BASE_URL || 'http://localhost:7002';
 
 export const GET = apiHandler({
   url: `${CATALOGUE_BASE_URL}/api/catalogue/categories`,

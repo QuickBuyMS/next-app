@@ -21,15 +21,15 @@ const LOCALHOST = 'localhost';
 const PORT_ROUTER = [
   {
     match: /^\/api\/auth(\/|$)/,
-    baseURL: `http://${LOCALHOST}:7001`,
+    baseURL: `http://${LOCALHOST}:3002`,
   },
   {
     match: /^\/api\/catalogue(\/|$)/,
-    baseURL: `http://${LOCALHOST}:7002`,
+    baseURL: `http://${LOCALHOST}:3003`,
   },
   {
     match: /^\/api\/order(\/|$)/,
-    baseURL: `http://${LOCALHOST}:7000`,
+    baseURL: `http://${LOCALHOST}:3001`,
   },
 ];
 
