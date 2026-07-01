@@ -21,15 +21,19 @@ const LOCALHOST = 'localhost';
 const PORT_ROUTER = [
   {
     match: /^\/api\/auth(\/|$)/,
-    baseURL: `http://${LOCALHOST}:3002`,
+    baseURL: process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || `http://${LOCALHOST}:7001`,
   },
   {
     match: /^\/api\/catalogue(\/|$)/,
-    baseURL: `http://${LOCALHOST}:3003`,
+    baseURL: process.env.NEXT_PUBLIC_CATALOGUE_SERVICE_URL || `http://${LOCALHOST}:7002`,
   },
   {
     match: /^\/api\/order(\/|$)/,
-    baseURL: `http://${LOCALHOST}:3001`,
+    baseURL: process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || `http://${LOCALHOST}:7000`,
+  },
+  {
+    match: /^\/graphql(\/|$)/,
+    baseURL: process.env.NEXT_PUBLIC_GRAPHQL_URL || `http://${LOCALHOST}:7000`, // The graphql request appending /graphql handles the rest, but wait, the profileApi actually makes the full URL, let's keep this as the base host if used, though graphql isn't used via baseQuery with proxy usually unless configured that way.
   },
 ];
 
@@ -70,7 +74,7 @@ axiosInstance.interceptors.request.use(
 // ---------- Mutex for token refresh (prevents concurrent refreshes) ----------
 let refreshPromise = null;
 
-const refreshAuthToken = async () => {
+export const refreshAuthToken = async () => {
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = axios
@@ -91,6 +95,9 @@ const refreshAuthToken = async () => {
       // Refresh failed — session is invalid, force logout
       store?.dispatch(logout());
       clearAll();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/signin';
+      }
       return '';
     })
     .finally(() => {
