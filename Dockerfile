@@ -4,6 +4,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+# Accept the GraphQL URL as a build argument (required for Next.js to bake it into the client-side bundle)
+ARG NEXT_PUBLIC_GRAPHQL_URL
+ENV NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL}
 RUN npm run build
 
 # Stage 2: Production
