@@ -6,13 +6,19 @@
  * Receives pre-fetched products & categories from the server component,
  * handles search, category filter, and price range filtering entirely
  * client-side (in-memory). URL query params stay synced for shareability.
+ *
+ * Performance optimizations:
+ * - useTransition: wraps router.replace() calls to keep UI responsive during navigation
+ * - useDeferredValue: defers search input rendering so typing stays snappy
+ * - useCallback: memoizes updateMultipleParams and handlers
+ * - Hero image: uses next/image with priority + fetchPriority for LCP
  */
 import ProductCard from '@/components/products/ProductCard';
 import Loader from '@/components/ui/Loader';
 import Pagination from '@/components/ui/Pagination';
 import { FiSearch, FiPackage, FiX, FiFilter, FiClock } from 'react-icons/fi';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useCallback, useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import { useProductFilters } from '@/hooks/useProductFilters';
 
 export default function ProductListingClient({
   initialProducts = [],
@@ -24,134 +30,34 @@ export default function ProductListingClient({
   pageSize = 5,
   hasMore = false,
 }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Read filter state from URL query params
-  const searchTerm = searchParams.get('search') || '';
-  const selectedCategory = searchParams.get('category') || '';
-  const selectedSubcategory = searchParams.get('subcategory') || '';
-  const minPriceParam = searchParams.get('minPrice') || '';
-  const maxPriceParam = searchParams.get('maxPrice') || '';
-
-  const hasFilter = Boolean(
-    searchTerm || selectedCategory || selectedSubcategory || minPriceParam || maxPriceParam
-  );
-
-  // Local state for debounced inputs
-  const [localSearch, setLocalSearch] = useState(searchTerm);
-  const [localMinPrice, setLocalMinPrice] = useState(minPriceParam);
-  const [localMaxPrice, setLocalMaxPrice] = useState(maxPriceParam);
-
-  // Sync local state when URL params change externally
-  useEffect(() => {
-    setLocalSearch(searchTerm);
-    setLocalMinPrice(minPriceParam);
-    setLocalMaxPrice(maxPriceParam);
-  }, [searchTerm, minPriceParam, maxPriceParam]);
-
-  // Update URL query params
-  const updateMultipleParams = useCallback(
-    (updates) => {
-      const params = new URLSearchParams(searchParams.toString());
-      
-      // Reset page to 1 if we are changing core filters
-      if ('search' in updates || 'category' in updates || 'subcategory' in updates || 'minPrice' in updates || 'maxPrice' in updates) {
-        params.delete('page');
-      }
-
-      // If category changes, reset subcategory
-      if ('category' in updates) {
-        params.delete('subcategory');
-      }
-
-      Object.entries(updates).forEach(([key, value]) => {
-        if (value) params.set(key, value);
-        else params.delete(key);
-      });
-      const qs = params.toString();
-      router.replace(`/products${qs ? `?${qs}` : ''}`, { scroll: false });
-    },
-    [searchParams, router]
-  );
-
-  const handlePageChange = (newPage) => {
-    updateMultipleParams({ page: newPage });
-  };
-
-  const handlePageSizeChange = (newSize) => {
-    // When changing page size, we must reset back to page 1
-    updateMultipleParams({ limit: newSize, page: 1 });
-  };
-
-  // Debounce text/price inputs → push to URL
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      const updates = {};
-      let hasChanges = false;
-      if (localSearch !== searchTerm) {
-        updates.search = localSearch;
-        hasChanges = true;
-      }
-      if (localMinPrice !== minPriceParam) {
-        updates.minPrice = localMinPrice;
-        hasChanges = true;
-      }
-      if (localMaxPrice !== maxPriceParam) {
-        updates.maxPrice = localMaxPrice;
-        hasChanges = true;
-      }
-
-      if (hasChanges) {
-        updateMultipleParams(updates);
-      }
-    }, 400);
-    return () => clearTimeout(handler);
-  }, [
-    localSearch,
-    localMinPrice,
-    localMaxPrice,
-    searchTerm,
-    minPriceParam,
-    maxPriceParam,
+  const {
+    isNavigating,
+    hasFilter,
+    localSearch, setLocalSearch,
+    localMinPrice, setLocalMinPrice,
+    localMaxPrice, setLocalMaxPrice,
+    selectedCategory, selectedSubcategory,
     updateMultipleParams,
-  ]);
-
-  // Clear all filters
-  const handleClearAll = () => {
-    setLocalSearch('');
-    setLocalMinPrice('');
-    setLocalMaxPrice('');
-    router.replace('/products', { scroll: false });
-  };
+    handleClearAll,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useProductFilters();
 
   // The server now handles all filtering and sends us the exact list
   const displayProducts = initialProducts;
 
-  // Format the ISR fetch timestamp for display
-  const formattedFetchedAt = fetchedAt
-    ? new Date(fetchedAt).toLocaleTimeString('en-IN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      })
-    : null;
+  // Format the ISR fetch timestamp for display — memoized to avoid recalc on re-render
+  const formattedFetchedAt = useMemo(() => {
+    if (!fetchedAt) return null;
+    return new Date(fetchedAt).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  }, [fetchedAt]);
 
   return (
-    <div className="products-page" id="products-page">
-      {/* Hero Banner */}
-      <div className="products-hero">
-        <div className="products-hero__content">
-          <h1 className="products-hero__title">
-            Discover Amazing Products
-          </h1>
-          <p className="products-hero__subtitle">
-            Browse our curated collection — no account needed
-          </p>
-        </div>
-        <div className="products-hero__glow" />
-      </div>
-
+    <>
       {/* Search and Filter */}
       <div
         className="products-search"
@@ -303,7 +209,7 @@ export default function ProductListingClient({
           />
         </div>
 
-        <span className="products-search__count">
+        <span className="products-search__count" style={{ opacity: isNavigating ? 0.5 : 1, transition: 'opacity 0.2s' }}>
           {displayProducts.length} product
           {displayProducts.length !== 1 ? 's' : ''}
         </span>
@@ -362,6 +268,6 @@ export default function ProductListingClient({
           />
         </>
       )}
-    </div>
+    </>
   );
 }

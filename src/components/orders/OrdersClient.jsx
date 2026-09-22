@@ -96,6 +96,7 @@ export default function OrdersClient() {
                     src={item.product_details.image_url}
                     alt={item.product_details?.name || 'Product Image'}
                     fill
+                    sizes="80px"
                     style={{ objectFit: 'cover' }}
                   />
                 ) : (

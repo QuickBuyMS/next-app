@@ -105,7 +105,7 @@ export default function WishlistClient() {
               {/* Product Image */}
               <Link href={`/products/${productId}`} className="wishlist-card__image-wrap">
                 {item.image_url ? (
-                  <Image src={item.image_url} alt={item.name} className="wishlist-card__img" width={400} height={400} unoptimized />
+                  <Image src={item.image_url} alt={item.name} className="wishlist-card__img" width={400} height={400} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
                 ) : (
                   <div className="wishlist-card__placeholder">
                     <FiShoppingBag size={32} />

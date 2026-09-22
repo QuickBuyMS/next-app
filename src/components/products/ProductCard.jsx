@@ -4,12 +4,19 @@
  * ProductCard — displays a product in the listing grid
  * Links to the SSR product detail page
  * Add to Cart and Add to Wishlist check auth — redirect to signin if unauthenticated
+ *
+ * Performance optimizations:
+ * - useTransition: cart/wishlist actions don't block the UI paint
+ * - useCallback: memoized event handlers prevent child re-renders
+ * - Image: removed unoptimized, added sizes for responsive srcset
+ * - Removed console.log debug statement
  */
 import { useSelector, useDispatch } from 'react-redux';
 import { selectIsAuthenticated, selectProfile } from '@/redux/slice/authSlice';
 import { useUpdateCartMutation, useUpdateWishlistMutation } from '@/services/orderApi';
 import { showSnackbar } from '@/redux/slice/snackbarSlice';
 import { useRouter } from 'next/navigation';
+import { useCallback, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiShoppingCart, FiHeart, FiEye } from 'react-icons/fi';
@@ -22,6 +29,9 @@ export default function ProductCard({ product }) {
   const userId = profile?.user_id;
   const [updateCart, { isLoading: isAdding }] = useUpdateCartMutation();
   const [updateWishlist, { isLoading: isWishing }] = useUpdateWishlistMutation();
+
+  // INP: useTransition ensures snackbar/state updates don't block interaction paint
+  const [isPending, startTransition] = useTransition();
 
   const {
     product_id,
@@ -37,11 +47,9 @@ export default function ProductCard({ product }) {
   const productImage = image_url;
   const hasDiscount = discountPrice && discountPrice < price;
 
-  const handleAddToCart = async (e) => {
+  const handleAddToCart = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    console.log(productId)
 
     if (!isAuthenticated) {
       router.push(`/signin?redirect=/products`);
@@ -50,17 +58,22 @@ export default function ProductCard({ product }) {
 
     try {
       await updateCart({ userId, productId, quantity: 1 }).unwrap();
-      dispatch(
-        showSnackbar({ message: `${name} added to cart!`, type: 'success' })
-      );
+      // INP: Wrap non-urgent state update in startTransition
+      startTransition(() => {
+        dispatch(
+          showSnackbar({ message: `${name} added to cart!`, type: 'success' })
+        );
+      });
     } catch (err) {
-      dispatch(
-        showSnackbar({ message: 'Failed to add to cart', type: 'error' })
-      );
+      startTransition(() => {
+        dispatch(
+          showSnackbar({ message: 'Failed to add to cart', type: 'error' })
+        );
+      });
     }
-  };
+  }, [isAuthenticated, router, updateCart, userId, productId, name, dispatch]);
 
-  const handleAddToWishlist = async (e) => {
+  const handleAddToWishlist = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -71,15 +84,19 @@ export default function ProductCard({ product }) {
 
     try {
       await updateWishlist({ userId, productId }).unwrap();
-      dispatch(
-        showSnackbar({ message: `${name} added to wishlist!`, type: 'success' })
-      );
+      startTransition(() => {
+        dispatch(
+          showSnackbar({ message: `${name} added to wishlist!`, type: 'success' })
+        );
+      });
     } catch (err) {
-      dispatch(
-        showSnackbar({ message: 'Failed to update wishlist', type: 'error' })
-      );
+      startTransition(() => {
+        dispatch(
+          showSnackbar({ message: 'Failed to update wishlist', type: 'error' })
+        );
+      });
     }
-  };
+  }, [isAuthenticated, router, updateWishlist, userId, productId, name, dispatch]);
 
   return (
     <div className="product-card" id={`product-card-${productId}`}>
@@ -92,7 +109,7 @@ export default function ProductCard({ product }) {
               className="product-card__img"
               width={400}
               height={400}
-              unoptimized
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
           ) : (
             <div className="product-card__placeholder">
@@ -135,7 +152,7 @@ export default function ProductCard({ product }) {
         <button
           className="product-card__cart-btn"
           onClick={handleAddToCart}
-          disabled={isAdding}
+          disabled={isAdding || isPending}
           title="Add to Cart"
         >
           <FiShoppingCart size={16} />
@@ -144,7 +161,7 @@ export default function ProductCard({ product }) {
         <button
           className={`product-card__wishlist-btn ${isWishing ? 'product-card__wishlist-btn--loading' : ''}`}
           onClick={handleAddToWishlist}
-          disabled={isWishing}
+          disabled={isWishing || isPending}
           title="Add to Wishlist"
           aria-label="Add to Wishlist"
         >

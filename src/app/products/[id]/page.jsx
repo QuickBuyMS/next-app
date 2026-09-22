@@ -127,7 +127,8 @@ export default async function ProductDetailPage({ params }) {
                 className="product-detail__img"
                 width={600}
                 height={600}
-                unoptimized
+                priority
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
             ) : (
               <div className="product-detail__img-placeholder">
@@ -151,7 +152,7 @@ export default async function ProductDetailPage({ params }) {
                   key={idx}
                   className={`product-detail__thumb ${idx === 0 ? 'product-detail__thumb--active' : ''}`}
                 >
-                  <Image src={img} alt={`${name} view ${idx + 1}`} width={100} height={100} unoptimized />
+                  <Image src={img} alt={`${name} view ${idx + 1}`} width={100} height={100} sizes="100px" />
                 </div>
               ))}
             </div>

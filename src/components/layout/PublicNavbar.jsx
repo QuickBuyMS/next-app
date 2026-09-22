@@ -12,7 +12,12 @@ import { selectIsAuthenticated, selectProfile } from '@/redux/slice/authSlice';
 import { useLogoutMutation } from '@/services/authApi';
 import { useRouter } from 'next/navigation';
 import { FiShoppingCart, FiUser, FiLogIn, FiLogOut } from 'react-icons/fi';
-import ConfirmModal from '@/components/ui/ConfirmModal';
+import dynamic from 'next/dynamic';
+
+// Code splitting: ConfirmModal is only rendered on logout click, no need in initial bundle
+const ConfirmModal = dynamic(() => import('@/components/ui/ConfirmModal'), {
+  ssr: false,
+});
 
 export default function PublicNavbar() {
   const isAuthenticated = useSelector(selectIsAuthenticated);

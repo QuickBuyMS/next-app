@@ -9,7 +9,12 @@ import { selectProfile } from '@/redux/slice/authSlice';
 import { useLogoutMutation } from '@/services/authApi';
 import { useRouter } from 'next/navigation';
 import { FiBell, FiSearch, FiLogOut, FiShoppingCart } from 'react-icons/fi';
-import ConfirmModal from '@/components/ui/ConfirmModal';
+import dynamic from 'next/dynamic';
+
+// Code splitting: ConfirmModal only needed on logout click
+const ConfirmModal = dynamic(() => import('@/components/ui/ConfirmModal'), {
+  ssr: false,
+});
 
 export default function TopBar() {
   const profile = useSelector(selectProfile);

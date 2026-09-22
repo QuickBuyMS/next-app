@@ -12,6 +12,7 @@ import { showSnackbar } from '@/redux/slice/snackbarSlice';
 import { selectProfile } from '@/redux/slice/authSlice';
 import { FiShoppingCart, FiArrowLeft, FiShield, FiTruck } from 'react-icons/fi';
 import Link from 'next/link';
+import { useCallback } from 'react';
 
 export default function CartClient() {
   const router = useRouter();
@@ -35,22 +36,22 @@ export default function CartClient() {
 
   const itemCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
-  const handleUpdateQuantity = async (productId, quantity) => {
+  const handleUpdateQuantity = useCallback(async (productId, quantity) => {
     try {
       await updateCart({ userId, productId, quantity }).unwrap();
     } catch (err) {
       dispatch(showSnackbar({ message: 'Failed to update quantity', type: 'error' }));
     }
-  };
+  }, [updateCart, userId, dispatch]);
 
-  const handleRemoveItem = async (productId) => {
+  const handleRemoveItem = useCallback(async (productId) => {
     try {
       await updateCart({ userId, productId, quantity: 0 }).unwrap();
       dispatch(showSnackbar({ message: 'Item removed from cart', type: 'success' }));
     } catch (err) {
       dispatch(showSnackbar({ message: 'Failed to remove item', type: 'error' }));
     }
-  };
+  }, [updateCart, userId, dispatch]);
 
   if (isFetching && cartItems.length === 0) {
     return (

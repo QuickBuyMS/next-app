@@ -63,7 +63,18 @@ export default function StoreProvider({ children }) {
 
   return (
     <Provider store={store}>
-      {isReady ? children : null}
+      {isReady ? children : (
+        /* CLS: Reserve full viewport space during auth hydration
+           instead of rendering null (which causes layout shift) */
+        <div
+          style={{
+            minHeight: '100vh',
+            background: 'var(--color-bg, #F5F6FA)',
+          }}
+          aria-busy="true"
+          aria-label="Loading application"
+        />
+      )}
     </Provider>
   );
 }
