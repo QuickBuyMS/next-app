@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiArrowLeft, FiPackage, FiStar, FiTruck, FiShield } from 'react-icons/fi';
 import ProductActions from '@/components/products/ProductActions';
+import ProductComparison from '@/components/products/ProductComparison';
 import { fetchData } from '@/utils/fetchData';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
@@ -208,6 +209,9 @@ export default async function ProductDetailPage({ params }) {
           </div>
         </div>
       </div>
+      
+      {/* AI Comparison Section */}
+      <ProductComparison productId={resolvedId} />
     </div>
   );
 }
