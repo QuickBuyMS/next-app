@@ -4,19 +4,12 @@
  * ProductListingClient — client-side interactive shell for the ISR products page
  *
  * Receives pre-fetched products & categories from the server component,
- * handles search, category filter, and price range filtering entirely
- * client-side (in-memory). URL query params stay synced for shareability.
- *
- * Performance optimizations:
- * - useTransition: wraps router.replace() calls to keep UI responsive during navigation
- * - useDeferredValue: defers search input rendering so typing stays snappy
- * - useCallback: memoizes updateMultipleParams and handlers
- * - Hero image: uses next/image with priority + fetchPriority for LCP
+ * handles category filter and price range filtering.
  */
 import ProductCard from '@/components/products/ProductCard';
 import Loader from '@/components/ui/Loader';
 import Pagination from '@/components/ui/Pagination';
-import { FiSearch, FiPackage, FiX, FiFilter, FiClock } from 'react-icons/fi';
+import { FiSearch, FiFilter, FiClock } from 'react-icons/fi';
 import { useMemo } from 'react';
 import { useProductFilters } from '@/hooks/useProductFilters';
 
@@ -33,7 +26,6 @@ export default function ProductListingClient({
   const {
     isNavigating,
     hasFilter,
-    localSearch, setLocalSearch,
     localMinPrice, setLocalMinPrice,
     localMaxPrice, setLocalMaxPrice,
     selectedCategory, selectedSubcategory,
@@ -43,10 +35,8 @@ export default function ProductListingClient({
     handlePageSizeChange,
   } = useProductFilters();
 
-  // The server now handles all filtering and sends us the exact list
   const displayProducts = initialProducts;
 
-  // Format the ISR fetch timestamp for display — memoized to avoid recalc on re-render
   const formattedFetchedAt = useMemo(() => {
     if (!fetchedAt) return null;
     return new Date(fetchedAt).toLocaleTimeString('en-IN', {
@@ -58,7 +48,7 @@ export default function ProductListingClient({
 
   return (
     <>
-      {/* Search and Filter */}
+      {/* Category & Price Filter Controls */}
       <div
         className="products-search"
         style={{
@@ -66,32 +56,10 @@ export default function ProductListingClient({
           gap: '1rem',
           flexWrap: 'wrap',
           alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '1.5rem',
         }}
       >
-        <div
-          className="products-search__wrapper"
-          style={{ flex: 1, minWidth: '250px' }}
-        >
-          <FiSearch className="products-search__icon" size={20} />
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="products-search__input"
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-            id="products-search-input"
-          />
-          {hasFilter && (
-            <button
-              className="products-search__clear"
-              onClick={handleClearAll}
-              aria-label="Clear all filters"
-            >
-              <FiX size={16} />
-            </button>
-          )}
-        </div>
-
         <div
           className="products-filter"
           style={{

@@ -14,8 +14,7 @@
  * - All API calls routed through Next.js API routes (proxy layer)
  * - fetchData wrapper for clean try-catch handling
  */
-import ProductListingClient from '@/components/products/ProductListingClient';
-import IntentMatchmaker from '@/components/products/IntentMatchmaker';
+import ProductsPageClient from '@/components/products/ProductsPageClient';
 import { fetchData } from '@/utils/fetchData';
 import Image from 'next/image';
 
@@ -120,9 +119,7 @@ export default async function ProductsPage({ searchParams }) {
         <div className="products-hero__glow" />
       </div>
 
-      <IntentMatchmaker />
-
-      <ProductListingClient
+      <ProductsPageClient
         initialProducts={productsData}
         categories={categoriesResult.data}
         subcategories={subcategoriesResult.data}

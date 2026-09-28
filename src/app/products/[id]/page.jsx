@@ -3,12 +3,6 @@
  *
  * Fetches product data at request time via the internal Next.js API route.
  * Uses dynamic route params — /products/{id}
- *
- * This demonstrates:
- * - Next.js SSR with server components
- * - Dynamic route segments ([id] param)
- * - API route usage for server-side data fetching
- * - fetchData wrapper for clean try-catch handling
  */
 import Link from 'next/link';
 import Image from 'next/image';
@@ -18,7 +12,6 @@ import { fetchData } from '@/utils/fetchData';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-// Metadata for SEO — dynamic based on product
 export async function generateMetadata({ params }) {
   const { id: productId } = await params;
 
@@ -45,7 +38,6 @@ export async function generateMetadata({ params }) {
   return { title: 'Product — QuickBuy' };
 }
 
-// Pre-render specific products (IDs 1-5) at build time
 export async function generateStaticParams() {
   const ids = ['1', '2', '3', '4', '5'];
 
@@ -59,7 +51,6 @@ export default async function ProductDetailPage({ params }) {
 
   const isPreRendered = ['1', '2', '3', '4', '5'].includes(String(productId));
 
-  // Fetch product data from our API route (SSR — runs on the server)
   const { data: product, error: fetchError } = await fetchData({
     url: `${API_BASE_URL}/api/products/${productId}`,
     label: 'ProductDetail',
@@ -67,7 +58,6 @@ export default async function ProductDetailPage({ params }) {
     fallback: null,
   });
 
-  // Error state
   if (fetchError || !product) {
     return (
       <div className="product-detail-error">
@@ -84,15 +74,16 @@ export default async function ProductDetailPage({ params }) {
     );
   }
 
-  // Extract product fields
   const {
     product_id,
     name = 'Unnamed Product',
     price = 0,
     description = '',
     image,
+    image_url,
     images = [],
     category,
+    category_name,
     brand,
     stock,
     discountPrice,
@@ -100,13 +91,14 @@ export default async function ProductDetailPage({ params }) {
   } = product;
 
   const resolvedId = product_id;
-  const allImages = image ? [image, ...images.filter((i) => i !== image)] : images;
+  const mainImage = image_url || image || '';
+  const allImages = mainImage ? [mainImage, ...images.filter((i) => i !== mainImage)] : images;
+  const categoryName = category_name || category || '';
   const hasDiscount = discountPrice && discountPrice < price;
   const inStock = stock === undefined || stock > 0;
 
   return (
     <div className="product-detail" id="product-detail-page">
-      {/* Breadcrumb */}
       <nav className="product-detail__breadcrumb">
         <Link href="/products" className="product-detail__breadcrumb-link">
           <FiArrowLeft size={16} />
@@ -117,7 +109,6 @@ export default async function ProductDetailPage({ params }) {
       </nav>
 
       <div className="product-detail__layout">
-        {/* Image Gallery */}
         <div className="product-detail__gallery">
           <div className="product-detail__main-image">
             {allImages.length > 0 ? (
@@ -144,7 +135,6 @@ export default async function ProductDetailPage({ params }) {
             )}
           </div>
 
-          {/* Thumbnail strip */}
           {allImages.length > 1 && (
             <div className="product-detail__thumbs">
               {allImages.slice(0, 5).map((img, idx) => (
@@ -159,10 +149,9 @@ export default async function ProductDetailPage({ params }) {
           )}
         </div>
 
-        {/* Product Info */}
         <div className="product-detail__info">
-          {category && (
-            <span className="product-detail__category">{category}</span>
+          {categoryName && (
+            <span className="product-detail__category">{categoryName}</span>
           )}
 
           <h1 className="product-detail__name">{name}</h1>
@@ -201,10 +190,8 @@ export default async function ProductDetailPage({ params }) {
             </div>
           )}
 
-          {/* Client-side interactive actions */}
           <ProductActions productId={resolvedId} productName={name} />
 
-          {/* Trust badges */}
           <div className="product-detail__trust">
             <div className="product-detail__trust-item">
               <FiTruck size={18} />
