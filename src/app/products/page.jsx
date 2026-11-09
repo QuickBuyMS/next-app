@@ -19,7 +19,9 @@ import { fetchData } from '@/utils/fetchData';
 import Image from 'next/image';
 
 // Base URL for internal API routes (server-side fetch needs absolute URL)
-const API_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
 export const metadata = {
   title: 'Browse Products — QuickBuy',
