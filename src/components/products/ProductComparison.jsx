@@ -51,11 +51,32 @@ export default function ProductComparison({ productId }) {
   }
 
   // Combine products for header matching
-  const allProducts = [data.targetProduct, ...(data.similarProducts || [])];
+  const allProducts = [data.targetProduct, ...(data.similarProducts || [])].filter(Boolean);
   
-  function matchProduct(headerName) {
-    const lowerHeader = headerName.toLowerCase().replace('(target)', '').trim();
-    return allProducts.find(p => lowerHeader.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(lowerHeader));
+  function matchProduct(headerName, colIndex) {
+    if (colIndex === 1 && data?.targetProduct) {
+      return data.targetProduct;
+    }
+
+    const cleanHeader = (headerName || '')
+      .toLowerCase()
+      .replace(/[*_~`]/g, '')
+      .replace(/\s*\([^)]*\)/g, '')
+      .trim();
+
+    const matched = allProducts.find((p) => {
+      const pName = (p.name || '').toLowerCase();
+      return cleanHeader.includes(pName) || pName.includes(cleanHeader);
+    });
+
+    if (matched) return matched;
+
+    // Ordered fallback: column index i (starting at 2) maps to similarProducts[i - 2]
+    if (colIndex > 1 && Array.isArray(data?.similarProducts) && data.similarProducts[colIndex - 2]) {
+      return data.similarProducts[colIndex - 2];
+    }
+
+    return null;
   }
 
   // Parse markdown table returned by Gemini
@@ -91,16 +112,18 @@ export default function ProductComparison({ productId }) {
                 {header.map((h, i) => {
                   if (i === 0) return <th key={i} style={styles.thFeature}>{h}</th>;
 
-                  const productMatch = matchProduct(h);
+                  const productMatch = matchProduct(h, i);
+                  const productImage = productMatch?.image_url || productMatch?.image;
+                  const displayName = (h || '').replace(/[*_~`]/g, '').replace(/\s*\([^)]*\)/g, '').trim();
                   
                   return (
                     <th key={i} style={{...styles.thProduct, ...(i === 1 ? styles.thHighlight : {})}}>
                       <div style={styles.headerCellContent}>
-                        {productMatch && productMatch.image_url ? (
+                        {productMatch && productImage ? (
                           <div style={styles.imageWrap}>
                             <Image 
-                              src={productMatch.image_url} 
-                              alt={productMatch.name} 
+                              src={productImage} 
+                              alt={productMatch.name || displayName || 'Product'} 
                               width={60} 
                               height={60} 
                               style={styles.productImage}
@@ -111,7 +134,7 @@ export default function ProductComparison({ productId }) {
                             <span>No Img</span>
                           </div>
                         )}
-                        <span style={styles.productHeaderName}>{h}</span>
+                        <span style={styles.productHeaderName}>{displayName || h}</span>
                         
                         {i === 1 && <span style={styles.targetBadge}>Current</span>}
                         

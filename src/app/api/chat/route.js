@@ -13,7 +13,7 @@ const NEST_API = process.env.NEST_API_BASE_URL || 'http://localhost:7002';
 const API_KEY  = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
 const google    = createGoogleGenerativeAI({ apiKey: API_KEY });
-const LLM_MODEL = google('gemini-3.8-flash');
+const LLM_MODEL = google('gemini-3.6-flash');
 
 export const maxDuration = 60;
 
