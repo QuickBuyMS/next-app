@@ -94,6 +94,9 @@ export default function ProductComparison({ productId }) {
   const recommendationMatch = rawText.match(/\*\*Recommendation:\*\*\s*(.*)/is) || rawText.match(/Recommendation:\s*(.*)/is);
   const recommendation = recommendationMatch ? recommendationMatch[1].replace(/\*\*/g, '').trim() : '';
 
+  // Detect whether products are in the table columns (standard) or in rows
+  const isRowOriented = (header[0] || '').toLowerCase().includes('product') && !header.slice(1).some((h, idx) => matchProduct(h, idx + 1));
+
   return (
     <div className="product-comparison-wrapper" style={styles.wrapper}>
       <div style={styles.header}>
@@ -110,7 +113,9 @@ export default function ProductComparison({ productId }) {
             <thead>
               <tr>
                 {header.map((h, i) => {
-                  if (i === 0) return <th key={i} style={styles.thFeature}>{h}</th>;
+                  if (isRowOriented || i === 0) {
+                    return <th key={i} style={styles.thFeature}>{h}</th>;
+                  }
 
                   const productMatch = matchProduct(h, i);
                   const productImage = productMatch?.image_url || productMatch?.image;
@@ -150,15 +155,47 @@ export default function ProductComparison({ productId }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, i) => (
-                <tr key={i} style={styles.tr}>
-                  {row.map((cell, j) => (
-                    <td key={j} style={{...styles.td, ...(j === 1 ? styles.tdHighlight : {})}}>
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              {rows.map((row, i) => {
+                const rowProduct = isRowOriented ? matchProduct(row[0] || '', i + 1) : null;
+                const rowImage = rowProduct?.image_url || rowProduct?.image;
+                const isTargetRow = rowProduct && String(rowProduct.product_id) === String(data?.targetProduct?.product_id);
+
+                return (
+                  <tr key={i} style={styles.tr}>
+                    {row.map((cell, j) => {
+                      if (isRowOriented && j === 0) {
+                        return (
+                          <td key={j} style={{...styles.td, ...(isTargetRow ? styles.tdHighlight : {})}}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              {rowImage ? (
+                                <div style={styles.imageWrap}>
+                                  <Image src={rowImage} alt={rowProduct?.name || cell} width={50} height={50} style={styles.productImage} />
+                                </div>
+                              ) : (
+                                <div style={styles.imagePlaceholder}><span>No Img</span></div>
+                              )}
+                              <div>
+                                <span style={{ fontWeight: '600', display: 'block' }}>{cell}</span>
+                                {rowProduct && (
+                                  <Link href={`/products/${rowProduct.product_id}`} style={{ fontSize: '0.75rem', color: 'var(--color-primary)' }}>
+                                    View
+                                  </Link>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        );
+                      }
+
+                      return (
+                        <td key={j} style={{...styles.td, ...(!isRowOriented && j === 1 ? styles.tdHighlight : {})}}>
+                          {cell}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
