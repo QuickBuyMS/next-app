@@ -29,6 +29,10 @@ export default function RootLayout({ children }) {
         {/* LCP: Preconnect to image CDN for faster first image load */}
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://picsum.photos" />
+        <link rel="preconnect" href="https://picsum.photos" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fastly.picsum.photos" />
+        <link rel="preconnect" href="https://fastly.picsum.photos" crossOrigin="anonymous" />
       </head>
       <body>
         <StoreProvider>

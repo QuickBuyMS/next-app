@@ -16,7 +16,7 @@ import { selectIsAuthenticated, selectProfile } from '@/redux/slice/authSlice';
 import { useUpdateCartMutation, useUpdateWishlistMutation } from '@/services/orderApi';
 import { showSnackbar } from '@/redux/slice/snackbarSlice';
 import { useRouter } from 'next/navigation';
-import { useCallback, useTransition } from 'react';
+import { useCallback, useTransition, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiShoppingCart, FiHeart, FiEye } from 'react-icons/fi';
@@ -32,6 +32,7 @@ export default function ProductCard({ product }) {
 
   // INP: useTransition ensures snackbar/state updates don't block interaction paint
   const [isPending, startTransition] = useTransition();
+  const [imageError, setImageError] = useState(false);
 
   const {
     product_id,
@@ -44,7 +45,7 @@ export default function ProductCard({ product }) {
   } = product;
 
   const productId = product_id;
-  const productImage = image_url;
+  const productImage = image_url || image;
   const hasDiscount = discountPrice && discountPrice < price;
 
   const handleAddToCart = useCallback(async (e) => {
@@ -102,7 +103,7 @@ export default function ProductCard({ product }) {
     <div className="product-card" id={`product-card-${productId}`}>
       <Link href={`/products/${productId}`} className="product-card__link">
         <div className="product-card__image-wrap">
-          {productImage ? (
+          {productImage && !imageError ? (
             <Image
               src={productImage}
               alt={name}
@@ -110,6 +111,7 @@ export default function ProductCard({ product }) {
               width={400}
               height={400}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="product-card__placeholder">
